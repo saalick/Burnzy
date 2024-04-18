@@ -1,4 +1,5 @@
 python-telegram-bot==13.0
+pyTelegramBotAPI==4.3.1
 requests
 web3==5.30.0
 schedule
