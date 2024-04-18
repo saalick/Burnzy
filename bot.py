@@ -1,21 +1,40 @@
 from web3 import Web3
 from web3.middleware import geth_poa_middleware
 import json
+import requests
 import time
 import telebot
+import threading
+import schedule
+from datetime import datetime, timedelta
 
-BOT_TOKEN = '7148574279:AAGrQmM3dJ3HhOaoQmqPB6BxqjGc5i-Ks2g'
+
+# Function to format timedelta as "x hours, y minutes, z seconds"
+def format_timedelta(td):
+  hours, remainder = divmod(td.seconds, 3600)
+  minutes, seconds = divmod(remainder, 60)
+  return f"{hours} hours, {minutes} minutes, {seconds} seconds"
+
+
+# Define global variables to store information about the last burn transaction
+last_burn_tx_hash = None
+last_burn_tx_time = None
+
+total_bot_supply = 36000000000
+total_supply = 100000000000
+BOT_TOKEN = '7148574279:AAGrQmM3dJ3HhOaoQmqPB6BxqjGc5i-Ks2g'  # Replace with your bot token
 # Create a TeleBot instance with your bot token
 bot = telebot.TeleBot(BOT_TOKEN)
 
 
 # Function to send a message to the Telegram group
-def send_message(chat_id, message):
-  bot.send_message(chat_id=chat_id, text=message)
+def send_message(message):
+  bot.send_message(
+      chat_id='-4103712352',
+      text=message,
+      parse_mode="HTML",
+      disable_web_page_preview=True)  # Replace with your group chat ID
 
-
-# Define the interval between transactions in seconds
-interval = 60
 
 # Constants for the RPC URL and contract details
 RPC_URL = 'https://base.publicnode.com'
@@ -23,11 +42,7 @@ CONTRACT_ADDRESS = '0xc551087B504803A204c81618a6836fA480E49c86'
 TO_ADDRESS = '0x000000000000000000000000000000000000dEaD'  #Adjust the to addressp
 
 # Replace with your private key
-private_key = '985323c8e0b3ddce99e1136d368712dfea86d1326784a5fdaeb10fd63b9c4dfe'
-
-# Check if the private key is provided
-if not private_key:
-  raise ValueError("Private key not provided.")
+PRIVATE_KEY = '985323c8e0b3ddce99e1136d368712dfea86d1326784a5fdaeb10fd63b9c4dfe'
 
 # Create a Web3 instance connected to the specified RPC URL
 w3 = Web3(Web3.HTTPProvider(RPC_URL))
@@ -39,10 +54,10 @@ w3.middleware_onion.inject(geth_poa_middleware, layer=0)
 try:
   # Attempt to get the latest block number
   block_number = w3.eth.block_number
-  print("Connected to Ethereum (Base) network!")
+  print("Connected to Ethereum network!")
 except Exception as e:
   # Connection failed
-  print(f"Failed to connect to Ethereum (Base) network: {e}")
+  print(f"Failed to connect to Ethereum network: {e}")
 
 # Load the contract ABI from a file
 with open('abi.json') as abi_file:
@@ -50,57 +65,126 @@ with open('abi.json') as abi_file:
 contract = w3.eth.contract(address=CONTRACT_ADDRESS, abi=contract_abi)
 
 
+# Function to send a transaction
+def send_transaction():
+  global last_burn_tx_hash, last_burn_tx_time
+  while True:
+    try:
+      # Define transaction details
+      token_amount = Web3.toWei(1000 * 100000000,
+                                'gwei')  # Adjust the amount as needed
+
+      # Get the nonce for the transaction
+      nonce = w3.eth.getTransactionCount(
+          w3.eth.account.privateKeyToAccount(PRIVATE_KEY).address)
+
+      # Build the transaction
+      transaction = contract.functions.transfer(
+          TO_ADDRESS, token_amount).buildTransaction({
+              'chainId': w3.eth.chain_id,
+              'gas': 210000,  # Adjust the gas limit as needed
+              'nonce': nonce,
+          })
+
+      # Sign the transaction with the private key
+      signed_txn = w3.eth.account.sign_transaction(transaction, PRIVATE_KEY)
+
+      # Attempt to send the transaction
+      tx_hash = w3.eth.sendRawTransaction(signed_txn.rawTransaction)
+      print(f"Transaction sent! Hash: {tx_hash.hex()}")
+      # Update last burn transaction details
+
+      last_burn_tx_hash = tx_hash.hex()
+      last_burn_tx_time = datetime.now()
+
+      # Send transaction details to Telegram group
+      # send_message(f"Transaction sent! Hash: {tx_hash.hex()}")
+      message = f"""
+<b>🚨🚨<i>BURN ALERT</i>🚨🚨</b>
+<a href='https://basescan.org/tx/{tx_hash.hex()}'>❗️Burn Transaction Detected🔥</a>\n
+ℹ️ <i><u>Transaction Details:</u></i>
+- <b>Transaction Hash:</b> <code>{tx_hash.hex()}</code>
+- <b>Amount Burned:</b> <code>25,000,000 Tokens</code>
+- <b>Value Burned:</b> $<code>N/A</code>
+- <b>Time:</b> <code>{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}</code>\n
+ 🐦<a href='https://twitter.com/your_twitter'>Twitter</a> 💬<a href='https://t.me/your_telegram'>Telegram</a> 🔍<a href='https://etherscan.io/'>Contract</a>
+      """
+      # Send the message to the Telegram group with HTML formatting
+      send_message(message)
+    except Exception as e:
+      print(f"Error sending transaction: {e}")
+      # Send error message to Telegram group
+      send_message(f"Error sending transaction: {e}")
+
+    # Wait for 30 seconds before sending the next transaction
+    time.sleep(60)
+
+
+# Start the transaction sending in a separate thread
+transaction_thread = threading.Thread(target=send_transaction)
+transaction_thread.start()
+
+
 # Define a command handler for '/stats' command
 @bot.message_handler(commands=['stats'])
 def send_stats(message):
-  total_amount = 0
-  # Get the transactions sent to the wallet address
-  transactions = w3.eth.getTransactionsByAddress(TO_ADDRESS)
-  for tx in transactions:
-    total_amount += tx.value
-  # Convert total amount to readable format
-  total_amount_eth = w3.fromWei(total_amount, 'ether')
-  # Send the total amount to the user
-  send_message(
-      message.chat.id,
-      f"Total amount sent to the wallet address: {total_amount_eth} ETH")
-
-
-# Run an infinite loop to send transactions periodically
-while True:
-  # Define transaction details
-  token_amount = Web3.toWei(1000 * 100000000,
-                            'gwei')  # Adjust the amount as needed
-
-  # Get the nonce for the transaction
-  nonce = w3.eth.getTransactionCount(
-      w3.eth.account.privateKeyToAccount(private_key).address)
-
-  # Build the transaction
-  transaction = contract.functions.transfer(
-      TO_ADDRESS, token_amount).buildTransaction({
-          'chainId': w3.eth.chain_id,
-          'gas': 210000,  # Adjust the gas limit as needed
-          'nonce': nonce,
-      })
-
-  # Sign the transaction with the private key
-  signed_txn = w3.eth.account.sign_transaction(transaction, private_key)
-
-  # Attempt to send the transaction
   try:
-    tx_hash = w3.eth.sendRawTransaction(signed_txn.rawTransaction)
-    print(f"Transaction sent! Hash: {tx_hash.hex()}")
+    # Define the URL to get the total tokens burned
+    total_burned_url = 'https://api.basescan.org/api?module=account&action=tokenbalance&contractaddress=0xc551087B504803A204c81618a6836fA480E49c86&address=0x000000000000000000000000000000000000dEaD&tag=latest&apikey=I2DMDYR4A9UGZDB6VX5ZGG29PT4Y8ZSBPT'
 
-    # Send transaction details to Telegram group
-    send_message('-4103712352', f"Transaction sent! Hash: {tx_hash.hex()}")
+    # Send a GET request to get the total tokens burned
+    response = requests.get(total_burned_url)
+
+    # Check if the request was successful
+    if response.status_code == 200:
+      # Parse the JSON response
+      data = response.json()
+
+      # Extract the result field (total tokens burned)
+      total_burned = float(data.get('result')) * (10**-18)
+
+      # Calculate the total percentage of the total supply burned
+      percentage_burned = (total_burned / total_supply) * 100
+
+      # Calculate the bot holding
+      bot_holding = total_bot_supply - total_burned
+
+      # Calculate the time since last burn transaction
+      if last_burn_tx_time:
+        time_since_last_burn = datetime.now() - last_burn_tx_time
+
+      # Calculate the time left for the next burn transaction
+      time_left_for_next_burn = timedelta(seconds=60) - (
+          datetime.now() - last_burn_tx_time) % timedelta(seconds=60)
+
+      stats_message = f"""
+🔥 <b>Total Tokens Burned:</b> <code>{total_burned:.0f}</code>
+💥 <b>Total Percentage of Total Supply Burned:</b> <code>{percentage_burned:.6f}%</code>
+💼 <b>Bot Holding:</b> <code>{bot_holding:.0f}</code>
+      """
+      # Add last burn transaction details if available
+      if last_burn_tx_time:
+        stats_message += f"<b></b> <a href='https://basescan.org/tx/{last_burn_tx_hash}'>🔗 Last Burn Transaction</a>\n"
+        stats_message += f"<b>⏱️Time Since Last Burn:</b> <code>{format_timedelta(time_since_last_burn)}</code>\n"
+
+      # Add time left for next burn transaction
+      stats_message += f"<b>⏳Time Left for Next Burn:</b> <code>{format_timedelta(time_left_for_next_burn)}</code>\n"
+      stats_message += f"""
+🐦<a href='https://twitter.com/your_twitter'>Twitter</a> 💬<a href='https://t.me/your_telegram'>Telegram</a> 🔍<a href='https://etherscan.io/'>Contract</a>
+      """
+
+      # Send the stats message to the Telegram group
+      send_message(stats_message)
+
+      # Print the stats
+      print(stats_message)
+    else:
+      print("Error:", response.text)
   except Exception as e:
-    print(f"Error sending transaction: {e}")
-    # Send error message to Telegram group
-    send_message('-4103712352', f"Error sending transaction: {e}")
+    # Handle any exceptions
+    print("Error:", e)
+    send_message("Error occurred while fetching stats.")
 
-  # Wait for the specified interval before sending the next transaction
-  time.sleep(interval)
 
-# Run the bot
+# Start the bot
 bot.polling()
