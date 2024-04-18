@@ -105,7 +105,7 @@ def send_transaction():
 ℹ️ <i><u>Transaction Details:</u></i>
 - <b>Transaction Hash:</b> <code>{tx_hash.hex()}</code>
 - <b>Amount Burned:</b> <code>25,000,000 Tokens</code>
-- <b>Value Burned:</b> $<code>N/A</code>
+- <b>Value Burned:</b> $ <code>N/A</code>
 - <b>Time:</b> <code>{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}</code>\n
  🐦<a href='https://twitter.com/your_twitter'>Twitter</a> 💬<a href='https://t.me/your_telegram'>Telegram</a> 🔍<a href='https://etherscan.io/'>Contract</a>
       """
@@ -116,8 +116,8 @@ def send_transaction():
       # Send error message to Telegram group
       send_message(f"Error sending transaction: {e}")
 
-    # Wait for 30 seconds before sending the next transaction
-    time.sleep(60)
+    # Wait for 12 hours before sending the next transaction
+    time.sleep(12 * 60 * 60)
 
 
 # Start the transaction sending in a separate thread
@@ -154,13 +154,14 @@ def send_stats(message):
         time_since_last_burn = datetime.now() - last_burn_tx_time
 
       # Calculate the time left for the next burn transaction
-      time_left_for_next_burn = timedelta(seconds=60) - (
-          datetime.now() - last_burn_tx_time) % timedelta(seconds=60)
+      time_left_for_next_burn = timedelta(seconds=12 * 60 * 60) - (
+          datetime.now() - last_burn_tx_time) % timedelta(seconds=12 * 60 * 60)
 
       stats_message = f"""
 🔥 <b>Total Tokens Burned:</b> <code>{total_burned:.0f}</code>
 💥 <b>Total Percentage of Total Supply Burned:</b> <code>{percentage_burned:.6f}%</code>
 💼 <b>Bot Holding:</b> <code>{bot_holding:.0f}</code>
+💰 <b>Value Burned:</b> $ <code>N/A</code>
       """
       # Add last burn transaction details if available
       if last_burn_tx_time:
@@ -176,8 +177,6 @@ def send_stats(message):
       # Send the stats message to the Telegram group
       send_message(stats_message)
 
-      # Print the stats
-      print(stats_message)
     else:
       print("Error:", response.text)
   except Exception as e:
