@@ -22,7 +22,7 @@ last_burn_tx_time = None
 
 total_bot_supply = 36000000000
 total_supply = 100000000000
-BOT_TOKEN = '7148574279:AAGrQmM3dJ3HhOaoQmqPB6BxqjGc5i-Ks2g'  # Replace with your bot token
+#BOT_TOKEN = '7148574279:AAGrQmM3dJ3HhOaoQmqPB6BxqjGc5i-Ks2g'  # Replace with your bot token
 # Create a TeleBot instance with your bot token
 bot = telebot.TeleBot(BOT_TOKEN)
 
@@ -175,7 +175,9 @@ def send_stats(message):
       """
 
       # Send the stats message to the Telegram group
-      send_message(stats_message)
+      #send_message(stats_message)
+      bot.send_animation(chat_id='-4103712352', animation='https://i.imgur.com/eiA66wE.gif', caption=stats_message, parse_mode='HTML')
+
 
     else:
       print("Error:", response.text)
