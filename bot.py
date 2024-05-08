@@ -22,7 +22,7 @@ last_burn_tx_time = None
 
 total_bot_supply = 36000000000
 total_supply = 100000000000
-BOT_TOKEN = '7148574279:AAGrQmM3dJ3HhOaoQmqPB6BxqjGc5i-Ks2g'  # Replace with your bot token
+BOT_TOKEN = '7078046885:AAGBbyfvFRjAMkljA0tRbkKtrRTjcvsurAc'  # Replace with your bot token
 # Create a TeleBot instance with your bot token
 bot = telebot.TeleBot(BOT_TOKEN)
 
