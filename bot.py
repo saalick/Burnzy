@@ -8,6 +8,9 @@ import threading
 import schedule
 from datetime import datetime, timedelta
 
+amount = 10
+amount_tokens = amount * 1000000000
+
 
 # Function to format timedelta as "x hours, y minutes, z seconds"
 def format_timedelta(td):
@@ -16,12 +19,22 @@ def format_timedelta(td):
   return f"{hours} hours, {minutes} minutes, {seconds} seconds"
 
 
+#fetching price of token
+
+price_url = "https://api.dexscreener.com/latest/dex/search?q=0xa2eb776f262a7d001df8606f74fcfd3ee4a31cc4"
+# Fetch the data
+price_response = requests.get(price_url)
+# Parse the JSON response
+price_data = price_response.json()
+# Extract the priceUsd value
+price_usd = float(price_data['pairs'][0]['priceUsd'])
+
 # Define global variables to store information about the last burn transaction
 last_burn_tx_hash = None
 last_burn_tx_time = None
 
-total_bot_supply = 36000000000
-total_supply = 100000000000
+total_bot_supply = 181000000
+total_supply = 1000000000
 BOT_TOKEN = '7078046885:AAGBbyfvFRjAMkljA0tRbkKtrRTjcvsurAc'  # Replace with your bot token
 # Create a TeleBot instance with your bot token
 bot = telebot.TeleBot(BOT_TOKEN)
@@ -30,19 +43,26 @@ bot = telebot.TeleBot(BOT_TOKEN)
 # Function to send a message to the Telegram group
 def send_message(message):
   bot.send_message(
-      chat_id='-4103712352',
+      chat_id='-1002118601081',
       text=message,
       parse_mode="HTML",
       disable_web_page_preview=True)  # Replace with your group chat ID
 
 
+def send_video_message(video_url, message):
+  bot.send_video(chat_id='-1002118601081',
+                 video=video_url,
+                 caption=message,
+                 parse_mode="HTML")
+
+
 # Constants for the RPC URL and contract details
 RPC_URL = 'https://base.publicnode.com'
-CONTRACT_ADDRESS = '0xDdaCA8806fbbFC0fd5dCd92E3d30714C542c96f8'
+CONTRACT_ADDRESS = '0xa2Eb776f262A7D001Df8606F74fcFD3Ee4A31cc4'
 TO_ADDRESS = '0x000000000000000000000000000000000000dEaD'  #Adjust the to addressp
 
 # Replace with your private key
-PRIVATE_KEY = 'edda48e802e7535aeac89e8cff36adacd6831610e45a5864cf79cd9b1a4dd0c5'
+PRIVATE_KEY = '15d2c62e3a3fcc89e0a44e5025b11c1860fc376cac9fd1cfe96069f6e7eb1296'
 
 # Create a Web3 instance connected to the specified RPC URL
 w3 = Web3(Web3.HTTPProvider(RPC_URL))
@@ -71,7 +91,7 @@ def send_transaction():
   while True:
     try:
       # Define transaction details
-      token_amount = Web3.toWei(1000,
+      token_amount = Web3.toWei(amount_tokens,
                                 'gwei')  # Adjust the amount as needed
 
       # Get the nonce for the transaction
@@ -99,18 +119,21 @@ def send_transaction():
 
       # Send transaction details to Telegram group
       # send_message(f"Transaction sent! Hash: {tx_hash.hex()}")
+      value_burned = float(250000 * price_usd)
+
       message = f"""
 <b>🚨🚨<i>BURN ALERT</i>🚨🚨</b>
 <a href='https://basescan.org/tx/{tx_hash.hex()}'>❗️Burn Transaction Detected🔥</a>\n
 ℹ️ <i><u>Transaction Details:</u></i>
 - <b>Transaction Hash:</b> <code>{tx_hash.hex()}</code>
 - <b>Amount Burned:</b> <code>250,000 Tokens</code>
-- <b>Value Burned:</b> $ <code>N/A</code>
+- <b>Value Burned:</b> <code>${value_burned:.2f}</code>
 - <b>Time:</b> <code>{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}</code>\n
- 🐦<a href='https://twitter.com/your_twitter'>Twitter</a> 💬<a href='https://t.me/your_telegram'>Telegram</a> 🔍<a href='https://etherscan.io/'>Contract</a>
+ 🐦<a href='https://x.com/thisisbased_'>Twitter</a> 💬<a href='https://t.me/ThisIsBasedFOB'>Telegram</a> 🌐<a href='https://fineonbase.wtf/'>Website</a>
       """
       # Send the message to the Telegram group with HTML formatting
-      send_message(message)
+      #send_message(message)
+      send_video_message('https://i.imgur.com/NI2vjqy.mp4', message)
     except Exception as e:
       print(f"Error sending transaction: {e}")
       # Send error message to Telegram group
@@ -130,7 +153,7 @@ transaction_thread.start()
 def send_stats(message):
   try:
     # Define the URL to get the total tokens burned
-    total_burned_url = 'https://api.basescan.org/api?module=account&action=tokenbalance&contractaddress=0xDdaCA8806fbbFC0fd5dCd92E3d30714C542c96f8&address=0x000000000000000000000000000000000000dEaD&tag=latest&apikey=I2DMDYR4A9UGZDB6VX5ZGG29PT4Y8ZSBPT'
+    total_burned_url = 'https://api.basescan.org/api?module=account&action=tokenbalance&contractaddress=0xa2Eb776f262A7D001Df8606F74fcFD3Ee4A31cc4&address=0x000000000000000000000000000000000000dEaD&tag=latest&apikey=I2DMDYR4A9UGZDB6VX5ZGG29PT4Y8ZSBPT'
 
     # Send a GET request to get the total tokens burned
     response = requests.get(total_burned_url)
@@ -141,8 +164,8 @@ def send_stats(message):
       data = response.json()
 
       # Extract the result field (total tokens burned)
-      total_burned = float(data.get('result')) * (10**-9)
-
+      total_burned = float(data.get('result')) * (10**-18)
+      total_value_burned = total_burned * price_usd
       # Calculate the total percentage of the total supply burned
       percentage_burned = (total_burned / total_supply) * 100
 
@@ -161,7 +184,7 @@ def send_stats(message):
 🔥 <b>Total Tokens Burned:</b> <code>{total_burned:.0f}</code>
 💥 <b>Total Percentage of Total Supply Burned:</b> <code>{percentage_burned:.6f}%</code>
 💼 <b>Bot Holding:</b> <code>{bot_holding:.0f}</code>
-💰 <b>Value Burned:</b> $ <code>N/A</code>
+💰 <b>Value Burned:</b> <code>${total_value_burned:.2f}</code>
       """
       # Add last burn transaction details if available
       if last_burn_tx_time:
@@ -171,15 +194,13 @@ def send_stats(message):
       # Add time left for next burn transaction
       stats_message += f"<b>⏳Time Left for Next Burn:</b> <code>{format_timedelta(time_left_for_next_burn)}</code>\n"
       stats_message += f"""
-🐦<a href='https://twitter.com/your_twitter'>Twitter</a> 💬<a href='https://t.me/your_telegram'>Telegram</a> 🔍<a href='https://etherscan.io/'>Contract</a>
+🐦<a href='https://x.com/thisisbased_'>Twitter</a> 💬<a href='https://t.me/ThisIsBasedFOB'>Telegram</a> 🌐<a href='https://fineonbase.wtf/'>Website</a>
       """
 
       # Send the stats message to the Telegram group
       #send_message(stats_message)
-      bot.send_animation(chat_id='-4103712352',
-                         animation='https://i.imgur.com/eiA66wE.gif',
-                         caption=stats_message,
-                         parse_mode='HTML')
+
+      send_video_message('https://i.imgur.com/NFrSE57.mp4', stats_message)
 
     else:
       print("Error:", response.text)
