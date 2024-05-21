@@ -181,10 +181,10 @@ def send_stats(message):
           datetime.now() - last_burn_tx_time) % timedelta(seconds=12 * 60 * 60)
 
       stats_message = f"""
-🔥 <b>Total Tokens Burned:</b> <code>{total_burned:.0f}</code>
+🔥 <b>Total Tokens Burned:</b> <code>{total_burned:,.0f}</code>
 💥 <b>Total Percentage of Total Supply Burned:</b> <code>{percentage_burned:.6f}%</code>
-💼 <b>Bot Holding:</b> <code>{bot_holdings:.0f}</code>
-💰 <b>Value Burned:</b> <code>${total_value_burned:.2f}</code>
+💼 <b>Bot Holding:</b> <code>{bot_holdings:,.0f}</code>
+💰 <b>Value Burned:</b> <code>${total_value_burned:,.2f}</code>
       """
       # Add last burn transaction details if available
       if last_burn_tx_time:
