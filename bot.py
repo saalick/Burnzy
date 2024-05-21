@@ -38,11 +38,11 @@ def send_message(message):
 
 # Constants for the RPC URL and contract details
 RPC_URL = 'https://base.publicnode.com'
-CONTRACT_ADDRESS = '0xc551087B504803A204c81618a6836fA480E49c86'
+CONTRACT_ADDRESS = '0xDdaCA8806fbbFC0fd5dCd92E3d30714C542c96f8'
 TO_ADDRESS = '0x000000000000000000000000000000000000dEaD'  #Adjust the to addressp
 
 # Replace with your private key
-PRIVATE_KEY = '985323c8e0b3ddce99e1136d368712dfea86d1326784a5fdaeb10fd63b9c4dfe'
+PRIVATE_KEY = 'edda48e802e7535aeac89e8cff36adacd6831610e45a5864cf79cd9b1a4dd0c5'
 
 # Create a Web3 instance connected to the specified RPC URL
 w3 = Web3(Web3.HTTPProvider(RPC_URL))
@@ -71,7 +71,7 @@ def send_transaction():
   while True:
     try:
       # Define transaction details
-      token_amount = Web3.toWei(1000 * 100000000,
+      token_amount = Web3.toWei(1000,
                                 'gwei')  # Adjust the amount as needed
 
       # Get the nonce for the transaction
@@ -104,7 +104,7 @@ def send_transaction():
 <a href='https://basescan.org/tx/{tx_hash.hex()}'>❗️Burn Transaction Detected🔥</a>\n
 ℹ️ <i><u>Transaction Details:</u></i>
 - <b>Transaction Hash:</b> <code>{tx_hash.hex()}</code>
-- <b>Amount Burned:</b> <code>25,000,000 Tokens</code>
+- <b>Amount Burned:</b> <code>250,000 Tokens</code>
 - <b>Value Burned:</b> $ <code>N/A</code>
 - <b>Time:</b> <code>{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}</code>\n
  🐦<a href='https://twitter.com/your_twitter'>Twitter</a> 💬<a href='https://t.me/your_telegram'>Telegram</a> 🔍<a href='https://etherscan.io/'>Contract</a>
@@ -130,7 +130,7 @@ transaction_thread.start()
 def send_stats(message):
   try:
     # Define the URL to get the total tokens burned
-    total_burned_url = 'https://api.basescan.org/api?module=account&action=tokenbalance&contractaddress=0xc551087B504803A204c81618a6836fA480E49c86&address=0x000000000000000000000000000000000000dEaD&tag=latest&apikey=I2DMDYR4A9UGZDB6VX5ZGG29PT4Y8ZSBPT'
+    total_burned_url = 'https://api.basescan.org/api?module=account&action=tokenbalance&contractaddress=0xDdaCA8806fbbFC0fd5dCd92E3d30714C542c96f8&address=0x000000000000000000000000000000000000dEaD&tag=latest&apikey=I2DMDYR4A9UGZDB6VX5ZGG29PT4Y8ZSBPT'
 
     # Send a GET request to get the total tokens burned
     response = requests.get(total_burned_url)
@@ -141,7 +141,7 @@ def send_stats(message):
       data = response.json()
 
       # Extract the result field (total tokens burned)
-      total_burned = float(data.get('result')) * (10**-18)
+      total_burned = float(data.get('result')) * (10**-9)
 
       # Calculate the total percentage of the total supply burned
       percentage_burned = (total_burned / total_supply) * 100
