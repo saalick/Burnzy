@@ -43,14 +43,14 @@ bot = telebot.TeleBot(BOT_TOKEN)
 # Function to send a message to the Telegram group
 def send_message(message):
   bot.send_message(
-      chat_id='-1002118601081',
+      chat_id='-4103712352',
       text=message,
       parse_mode="HTML",
       disable_web_page_preview=True)  # Replace with your group chat ID
 
 
 def send_video_message(video_url, message):
-  bot.send_video(chat_id='-1002118601081',
+  bot.send_video(chat_id='-4103712352',
                  video=video_url,
                  caption=message,
                  parse_mode="HTML")
