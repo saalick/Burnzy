@@ -163,7 +163,7 @@ def send_stats(message):
     if response.status_code == 200:
       # Parse the JSON response
       data = response.json()
-      holdings_data - holdings_response.json()
+      holdings_data = holdings_response.json()
       bot_holdings = float(holdings_data.get('result')) * (10**-18)
       # Extract the result field (total tokens burned)
       total_burned = float(data.get('result')) * (10**-18)
