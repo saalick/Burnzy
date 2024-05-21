@@ -154,23 +154,23 @@ def send_stats(message):
   try:
     # Define the URL to get the total tokens burned
     total_burned_url = 'https://api.basescan.org/api?module=account&action=tokenbalance&contractaddress=0xa2Eb776f262A7D001Df8606F74fcFD3Ee4A31cc4&address=0x000000000000000000000000000000000000dEaD&tag=latest&apikey=I2DMDYR4A9UGZDB6VX5ZGG29PT4Y8ZSBPT'
-
+    bot_holdings_url = 'https://api.basescan.org/api?module=account&action=tokenbalance&contractaddress=0xa2Eb776f262A7D001Df8606F74fcFD3Ee4A31cc4&address=0x9f4ab8e204646315760A9fB3995AB858e7D6CB9D&tag=latest&apikey=I2DMDYR4A9UGZDB6VX5ZGG29PT4Y8ZSBPT'
     # Send a GET request to get the total tokens burned
     response = requests.get(total_burned_url)
+    holdings_response = requests.get(bot_holdings_url)
 
     # Check if the request was successful
     if response.status_code == 200:
       # Parse the JSON response
       data = response.json()
-
+      holdings_data - holdings_response.json()
+      bot_holdings = float(holdings_data.get('result')) * (10**-18)
       # Extract the result field (total tokens burned)
       total_burned = float(data.get('result')) * (10**-18)
       total_value_burned = total_burned * price_usd
       # Calculate the total percentage of the total supply burned
       percentage_burned = (total_burned / total_supply) * 100
 
-      # Calculate the bot holding
-      bot_holding = total_bot_supply - total_burned
 
       # Calculate the time since last burn transaction
       if last_burn_tx_time:
