@@ -183,7 +183,7 @@ def send_stats(message):
       stats_message = f"""
 🔥 <b>Total Tokens Burned:</b> <code>{total_burned:.0f}</code>
 💥 <b>Total Percentage of Total Supply Burned:</b> <code>{percentage_burned:.6f}%</code>
-💼 <b>Bot Holding:</b> <code>{bot_holding:.0f}</code>
+💼 <b>Bot Holding:</b> <code>{bot_holdings:.0f}</code>
 💰 <b>Value Burned:</b> <code>${total_value_burned:.2f}</code>
       """
       # Add last burn transaction details if available
