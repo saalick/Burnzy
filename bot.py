@@ -119,8 +119,16 @@ def send_transaction():
 
       # Send transaction details to Telegram group
       # send_message(f"Transaction sent! Hash: {tx_hash.hex()}")
+      
+      price_url = "https://api.dexscreener.com/latest/dex/search?q=0xa2eb776f262a7d001df8606f74fcfd3ee4a31cc4"
+      # Fetch the data
+      price_response = requests.get(price_url)
+      # Parse the JSON response
+      price_data = price_response.json()
+      # Extract the priceUsd value
+      price_usd = float(price_data['pairs'][0]['priceUsd'])
       value_burned = float(250000 * price_usd)
-
+      
       message = f"""
 <b>🚨🚨<i>BURN ALERT</i>🚨🚨</b>
 <a href='https://basescan.org/tx/{tx_hash.hex()}'>❗️Burn Transaction Detected🔥</a>\n
@@ -155,10 +163,18 @@ def send_stats(message):
     # Define the URL to get the total tokens burned
     total_burned_url = 'https://api.basescan.org/api?module=account&action=tokenbalance&contractaddress=0xa2Eb776f262A7D001Df8606F74fcFD3Ee4A31cc4&address=0x000000000000000000000000000000000000dEaD&tag=latest&apikey=I2DMDYR4A9UGZDB6VX5ZGG29PT4Y8ZSBPT'
     bot_holdings_url = 'https://api.basescan.org/api?module=account&action=tokenbalance&contractaddress=0xa2Eb776f262A7D001Df8606F74fcFD3Ee4A31cc4&address=0x9f4ab8e204646315760A9fB3995AB858e7D6CB9D&tag=latest&apikey=I2DMDYR4A9UGZDB6VX5ZGG29PT4Y8ZSBPT'
+    
     # Send a GET request to get the total tokens burned
     response = requests.get(total_burned_url)
     holdings_response = requests.get(bot_holdings_url)
-
+    price_url = "https://api.dexscreener.com/latest/dex/search?q=0xa2eb776f262a7d001df8606f74fcfd3ee4a31cc4"
+      # Fetch the data
+    price_response = requests.get(price_url)
+      # Parse the JSON response
+    price_data = price_response.json()
+      # Extract the priceUsd value
+    price_usd = float(price_data['pairs'][0]['priceUsd'])
+    
     # Check if the request was successful
     if response.status_code == 200:
       # Parse the JSON response
