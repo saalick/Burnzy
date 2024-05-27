@@ -48,6 +48,14 @@ def send_message(message):
       parse_mode="HTML",
       disable_web_page_preview=True)  # Replace with your group chat ID
 
+# Function to send a message to the Telegram chat
+def send_msg(chat_id, message):
+  bot.send_message(
+      chat_id=chat_id,
+      text=message,
+      parse_mode="HTML",
+      disable_web_page_preview=True)
+
 
 def send_video_message(video_url, message):
   bot.send_video(chat_id='-1002118601081',
@@ -239,7 +247,7 @@ Take your project to the next level with our powerful @OnFireBurnbot! Automate a
 Boost your token's value and transparency effortlessly. Don't miss out – integrate our OnFire Burn bot today!
 🔗 Contact @TheBasedOne 🔗
     """
-    send_message(welcome_message)
+    send_msg(message.chat.id, welcome_message)
 
 
 # Start the bot
