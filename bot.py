@@ -8,7 +8,7 @@ import threading
 import schedule
 from datetime import datetime, timedelta
 
-amount = 250000
+amount = 1
 amount_tokens = amount * 1000000000
 
 
@@ -224,6 +224,22 @@ def send_stats(message):
     # Handle any exceptions
     print("Error:", e)
     send_message("Error occurred while fetching stats.")
+
+# Define a command handler for '/start' command
+@bot.message_handler(commands=['start'])
+def send_welcome(message):
+    welcome_message = """
+🚀🔥 Introducing the <b>OnFire Burn Bot</b> (@OnFireBurnbot)! 🔥🚀
+Take your project to the next level with our powerful @OnFireBurnbot! Automate and customize your token burns with ease, while keeping your community informed and engaged. Perfect for projects on Base Chain, BSC, and ETH!
+✨ Features:
+ • Automated Token Burns: Set the total tokens to burn and the interval between burns.
+ • Real-Time Notifications: Send instant burn notifications to your Telegram group.
+ • Comprehensive Stats: Track total tokens burned with detailed stats.
+ • Customizable Settings: Tailor the bot to fit your project's unique needs.
+Boost your token's value and transparency effortlessly. Don't miss out – integrate our OnFire Burn bot today!
+🔗 Contact @TheBasedOne 🔗
+    """
+    send_message(welcome_message)
 
 
 # Start the bot
