@@ -8,7 +8,7 @@ import threading
 import schedule
 from datetime import datetime, timedelta
 
-amount = 1
+amount = 250000
 amount_tokens = amount * 1000000000
 
 
