@@ -114,13 +114,13 @@ def send_transaction():
 
                 message = f"""
                 <b>🚨🚨<i>BURN ALERT</i>🚨🚨</b>
-                <a href='https://basescan.org/tx/{tx_hash.hex()}'>❗️Burn Transaction Detected🔥</a>\n
-                ℹ️ <i><u>Transaction Details:</u></i>
-                - <b>Transaction Hash:</b> <code>{tx_hash.hex()}</code>
-                - <b>Amount Burned:</b> <code>250,000 Tokens</code>
-                - <b>Value Burned:</b> <code>${value_burned:.2f}</code>
-                - <b>Time:</b> <code>{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}</code>\n
-                 🐦<a href='https://x.com/thisisbased_'>Twitter</a> 💬<a href='https://t.me/ThisIsBasedFOB'>Telegram</a> 🌐<a href='https://fineonbase.wtf/'>Website</a>
+ <a href='https://basescan.org/tx/{tx_hash.hex()}'>❗️Burn Transaction Detected🔥</a>\n
+ℹ️ <i><u>Transaction Details:</u></i>
+- <b>Transaction Hash:</b> <code>{tx_hash.hex()}</code>
+- <b>Amount Burned:</b> <code>250,000 Tokens</code>
+- <b>Value Burned:</b> <code>${value_burned:.2f}</code>
+- <b>Time:</b> <code>{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}</code>\n
+🐦<a href='https://x.com/thisisbased_'>Twitter</a> 💬<a href='https://t.me/ThisIsBasedFOB'>Telegram</a> 🌐<a href='https://fineonbase.wtf/'>Website</a>
                 """
                 send_video_message('https://i.imgur.com/NI2vjqy.mp4', message)
             else:
