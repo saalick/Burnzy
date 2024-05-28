@@ -3,6 +3,7 @@ from web3.middleware import geth_poa_middleware
 import json
 import requests
 import time
+import os
 import telebot
 import threading
 import schedule
@@ -11,6 +12,22 @@ from datetime import datetime, timedelta
 amount = 250000
 amount_tokens = amount * 1000000000
 
+last_burn_file = 'last_burn.json'
+
+# Function to load the last burn transaction time from the JSON file
+def load_last_burn_time():
+    if os.path.exists(last_burn_file):
+        with open(last_burn_file, 'r') as f:
+            data = json.load(f)
+            return data.get('last_burn_time')
+    else:
+        return None
+
+# Function to save the last burn transaction time to the JSON file
+def save_last_burn_time(last_burn_time):
+    data = {'last_burn_time': last_burn_time}
+    with open(last_burn_file, 'w') as f:
+        json.dump(data, f)
 
 # Function to format timedelta as "x hours, y minutes, z seconds"
 def format_timedelta(td):
@@ -95,69 +112,67 @@ contract = w3.eth.contract(address=CONTRACT_ADDRESS, abi=contract_abi)
 
 # Function to send a transaction
 def send_transaction():
-  global last_burn_tx_hash, last_burn_tx_time
-  while True:
-    try:
-      # Define transaction details
-      token_amount = Web3.toWei(amount_tokens,
-                                'gwei')  # Adjust the amount as needed
+    global last_burn_tx_hash, last_burn_tx_time
+    while True:
+        try:
+            # Check if the last burn transaction was done within the last 12 hours
+            last_burn_time = load_last_burn_time()
+            if last_burn_time is None or (datetime.now() - datetime.fromisoformat(last_burn_time)) >= timedelta(hours=12):
+                # Define transaction details
+                token_amount = Web3.toWei(amount_tokens, 'gwei')  # Adjust the amount as needed
 
-      # Get the nonce for the transaction
-      nonce = w3.eth.getTransactionCount(
-          w3.eth.account.privateKeyToAccount(PRIVATE_KEY).address)
+                # Get the nonce for the transaction
+                nonce = w3.eth.getTransactionCount(
+                    w3.eth.account.privateKeyToAccount(PRIVATE_KEY).address)
 
-      # Build the transaction
-      transaction = contract.functions.transfer(
-          TO_ADDRESS, token_amount).buildTransaction({
-              'chainId': w3.eth.chain_id,
-              'gas': 210000,  # Adjust the gas limit as needed
-              'nonce': nonce,
-          })
+                # Build the transaction
+                transaction = contract.functions.transfer(
+                    TO_ADDRESS, token_amount).buildTransaction({
+                        'chainId': w3.eth.chain_id,
+                        'gas': 210000,  # Adjust the gas limit as needed
+                        'nonce': nonce,
+                    })
 
-      # Sign the transaction with the private key
-      signed_txn = w3.eth.account.sign_transaction(transaction, PRIVATE_KEY)
+                # Sign the transaction with the private key
+                signed_txn = w3.eth.account.sign_transaction(transaction, PRIVATE_KEY)
 
-      # Attempt to send the transaction
-      tx_hash = w3.eth.sendRawTransaction(signed_txn.rawTransaction)
-      print(f"Transaction sent! Hash: {tx_hash.hex()}")
-      # Update last burn transaction details
+                # Attempt to send the transaction
+                tx_hash = w3.eth.sendRawTransaction(signed_txn.rawTransaction)
+                print(f"Transaction sent! Hash: {tx_hash.hex()}")
 
-      last_burn_tx_hash = tx_hash.hex()
-      last_burn_tx_time = datetime.now()
+                # Update last burn transaction details
+                last_burn_tx_hash = tx_hash.hex()
+                last_burn_tx_time = datetime.now()
+                save_last_burn_time(last_burn_tx_time.isoformat())
 
-      # Send transaction details to Telegram group
-      # send_message(f"Transaction sent! Hash: {tx_hash.hex()}")
+                # Send burn transaction details to Telegram group
+                message = f"""
+                <b>🚨🚨<i>BURN ALERT</i>🚨🚨</b>
+                <a href='https://basescan.org/tx/{tx_hash.hex()}'>❗️Burn Transaction Detected🔥</a>\n
+                ℹ️ <i><u>Transaction Details:</u></i>
+                - <b>Transaction Hash:</b> <code>{tx_hash.hex()}</code>
+                - <b>Amount Burned:</b> <code>250,000 Tokens</code>
+                - <b>Value Burned:</b> <code>${value_burned:.2f}</code>
+                - <b>Time:</b> <code>{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}</code>\n
+                 🐦<a href='https://x.com/thisisbased_'>Twitter</a> 💬<a href='https://t.me/ThisIsBasedFOB'>Telegram</a> 🌐<a href='https://fineonbase.wtf/'>Website</a>
+                """
+                send_video_message('https://i.imgur.com/NI2vjqy.mp4', message)
 
-      price_url = "https://api.dexscreener.com/latest/dex/search?q=0xa2eb776f262a7d001df8606f74fcfd3ee4a31cc4"
-      # Fetch the data
-      price_response = requests.get(price_url)
-      # Parse the JSON response
-      price_data = price_response.json()
-      # Extract the priceUsd value
-      price_usd = float(price_data['pairs'][0]['priceUsd'])
-      value_burned = float(250000 * price_usd)
+            else:
+                # Last burn transaction occurred within the last 12 hours, wait before attempting another burn
+                time_since_last_burn = datetime.now() - datetime.fromisoformat(last_burn_time)
+                time_left_for_next_burn = timedelta(hours=12) - time_since_last_burn
+                print(f"Last burn transaction occurred {format_timedelta(time_since_last_burn)} ago. Waiting {format_timedelta(time_left_for_next_burn)} before next burn.")
+                time.sleep(time_left_for_next_burn.total_seconds())
 
-      message = f"""
-<b>🚨🚨<i>BURN ALERT</i>🚨🚨</b>
-<a href='https://basescan.org/tx/{tx_hash.hex()}'>❗️Burn Transaction Detected🔥</a>\n
-ℹ️ <i><u>Transaction Details:</u></i>
-- <b>Transaction Hash:</b> <code>{tx_hash.hex()}</code>
-- <b>Amount Burned:</b> <code>250,000 Tokens</code>
-- <b>Value Burned:</b> <code>${value_burned:.2f}</code>
-- <b>Time:</b> <code>{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}</code>\n
- 🐦<a href='https://x.com/thisisbased_'>Twitter</a> 💬<a href='https://t.me/ThisIsBasedFOB'>Telegram</a> 🌐<a href='https://fineonbase.wtf/'>Website</a>
-      """
-      # Send the message to the Telegram group with HTML formatting
-      #send_message(message)
-      send_video_message('https://i.imgur.com/NI2vjqy.mp4', message)
-    except Exception as e:
-      print(f"Error sending transaction: {e}")
-      # Send error message to Telegram group
-      send_message(f"Error sending transaction: {e}")
+        except Exception as e:
+            print(f"Error sending transaction: {e}")
+            # Send error message to Telegram group
+            send_message(f"Error sending transaction: {e}")
+          
 
-    # Wait for 12 hours before sending the next transaction
-    time.sleep(12 * 60 * 60)
-
+# Load the last burn transaction time when the script starts
+last_burn_tx_time = load_last_burn_time()
 
 # Start the transaction sending in a separate thread
 transaction_thread = threading.Thread(target=send_transaction)
@@ -182,6 +197,7 @@ def send_stats(message):
     price_data = price_response.json()
       # Extract the priceUsd value
     price_usd = float(price_data['pairs'][0]['priceUsd'])
+    print(price_usd)
 
     # Check if the request was successful
     if response.status_code == 200:
@@ -203,13 +219,14 @@ def send_stats(message):
       # Calculate the time left for the next burn transaction
       time_left_for_next_burn = timedelta(seconds=12 * 60 * 60) - (
           datetime.now() - last_burn_tx_time) % timedelta(seconds=12 * 60 * 60)
-
+     
       stats_message = f"""
 🔥 <b>Total Tokens Burned:</b> <code>{total_burned:,.0f}</code>
 💥 <b>Total Percentage of Total Supply Burned:</b> <code>{percentage_burned:.6f}%</code>
 💼 <b>Bot Holding:</b> <code>{bot_holdings:,.0f}</code>
 💰 <b>Value Burned:</b> <code>${total_value_burned:,.2f}</code>
       """
+      print(stats_message)
       # Add last burn transaction details if available
       if last_burn_tx_time:
         stats_message += f"<b></b> <a href='https://basescan.org/tx/{last_burn_tx_hash}'>🔗 Last Burn Transaction</a>\n"
@@ -221,6 +238,7 @@ def send_stats(message):
 🐦<a href='https://x.com/thisisbased_'>Twitter</a> 💬<a href='https://t.me/ThisIsBasedFOB'>Telegram</a> 🌐<a href='https://fineonbase.wtf/'>Website</a>
       """
 
+      print("sent stats msg")
       # Send the stats message to the Telegram group
       #send_message(stats_message)
 
