@@ -139,7 +139,14 @@ def send_transaction():
                 # Attempt to send the transaction
                 tx_hash = w3.eth.sendRawTransaction(signed_txn.rawTransaction)
                 print(f"Transaction sent! Hash: {tx_hash.hex()}")
-
+                price_url = "https://api.dexscreener.com/latest/dex/search?q=0xa2eb776f262a7d001df8606f74fcfd3ee4a31cc4"
+                # Fetch the data
+                price_response = requests.get(price_url)
+                # Parse the JSON response
+                price_data = price_response.json()
+                # Extract the priceUsd value
+                price_usd = float(price_data['pairs'][0]['priceUsd'])
+                value_burned = price_usd * 250000
                 # Update last burn transaction details
                 last_burn_tx_hash = tx_hash.hex()
                 last_burn_tx_time = datetime.now()
