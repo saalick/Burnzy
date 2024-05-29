@@ -174,7 +174,7 @@ def send_stats(message):
             🐦<a href='https://x.com/thisisbased_'>Twitter</a> 💬<a href='https://t.me/ThisIsBasedFOB'>Telegram</a> 🌐<a href='https://fineonbase.wtf/'>Website</a>
             """
             print(stats_message)
-            send_msg(message.chat.id, stats_message)  # Corrected this line
+            send_video_message('https://i.imgur.com/NFrSE57.mp4', stats_message)  # Corrected this line
         else:
             print("Error:", response.text)
             send_msg(message.chat.id, "Failed to fetch statistics. Please try again later.")  # Corrected this line
