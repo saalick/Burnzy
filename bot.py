@@ -158,25 +158,29 @@ def send_stats(message):
 
             if last_burn_tx_time:
                 time_since_last_burn = datetime.now() - last_burn_tx_time
-                time_since_last_burn_str = format_timedelta(time_since_last_burn)
-            else:
-                time_since_last_burn_str = "N/A"
+                time_left_for_next_burn = timedelta(hours=12) - time_since_last_burn
 
-            message = f"""
-            <b>🔥🔥<i>BURN STATISTICS</i>🔥🔥</b>
-- <b>Total Burned:</b> <code>{total_burned:.0f} Tokens</code>
-- <b>Total Value Burned:</b> <code>${total_value_burned:.2f}</code>
-- <b>Percentage Burned:</b> <code>{percentage_burned:.2f}%</code>
-- <b>Bot Holdings:</b> <code>{bot_holdings:.0f} Tokens</code>
-- <b>Last Burn Time:</b> <code>{time_since_last_burn_str}</code>\n
-🐦<a href='https://x.com/thisisbased_'>Twitter</a> 💬<a href='https://t.me/ThisIsBasedFOB'>Telegram</a> 🌐<a href='https://fineonbase.wtf/'>Website</a>
+            stats_message = f"""
+            🔥 <b>Total Tokens Burned:</b> <code>{total_burned:,.0f}</code>
+            💥 <b>Total Percentage of Total Supply Burned:</b> <code>{percentage_burned:.6f}%</code>
+            💼 <b>Bot Holding:</b> <code>{bot_holdings:,.0f}</code>
+            💰 <b>Value Burned:</b> <code>${total_value_burned:,.2f}</code>
             """
-            send_msg(message.chat.id, message)
+            if last_burn_tx_time:
+                stats_message += f"<b>🔗 Last Burn Transaction:</b> <a href='https://basescan.org/tx/{last_burn_tx_hash}'>View</a>\n"
+                stats_message += f"<b>⏱️Time Since Last Burn:</b> <code>{format_timedelta(time_since_last_burn)}</code>\n"
+            stats_message += f"<b>⏳Time Left for Next Burn:</b> <code>{format_timedelta(time_left_for_next_burn)}</code>\n"
+            stats_message += """
+            🐦<a href='https://x.com/thisisbased_'>Twitter</a> 💬<a href='https://t.me/ThisIsBasedFOB'>Telegram</a> 🌐<a href='https://fineonbase.wtf/'>Website</a>
+            """
+            print(stats_message)
+            send_msg(message.chat.id, stats_message)  # Corrected this line
         else:
-            send_msg(message.chat.id, "Failed to fetch statistics. Please try again later.")
+            print("Error:", response.text)
+            send_msg(message.chat.id, "Failed to fetch statistics. Please try again later.")  # Corrected this line
     except Exception as e:
         print(f"Error fetching statistics: {e}")
-        send_msg(message.chat.id, f"Error fetching statistics: {e}")
+        send_msg(message.chat.id, f"Error fetching statistics: {e}")  # Corrected this line
 
 def main():
     start_transaction_thread()
