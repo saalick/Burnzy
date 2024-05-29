@@ -161,10 +161,10 @@ def send_stats(message):
                 time_left_for_next_burn = timedelta(hours=12) - time_since_last_burn
 
             stats_message = f"""
-            🔥 <b>Total Tokens Burned:</b> <code>{total_burned:,.0f}</code>
-            💥 <b>Total Percentage of Total Supply Burned:</b> <code>{percentage_burned:.6f}%</code>
-            💼 <b>Bot Holding:</b> <code>{bot_holdings:,.0f}</code>
-            💰 <b>Value Burned:</b> <code>${total_value_burned:,.2f}</code>
+🔥 <b>Total Tokens Burned:</b> <code>{total_burned:,.0f}</code>
+💥 <b>Total Percentage of Total Supply Burned:</b> <code>{percentage_burned:.6f}%</code>
+💼 <b>Bot Holding:</b> <code>{bot_holdings:,.0f}</code>
+💰 <b>Value Burned:</b> <code>${total_value_burned:,.2f}</code>
             """
             if last_burn_tx_time:
                 stats_message += f"<b>🔗 Last Burn Transaction:</b> <a href='https://basescan.org/tx/{last_burn_tx_hash}'>View</a>\n"
