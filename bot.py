@@ -131,9 +131,11 @@ def send_transaction():
         except Exception as e:
             print(f"Error sending transaction: {e}")
             send_message(f"Error sending transaction: {e}")
+            time.sleep(60)  # Wait for 60 seconds before retrying
 
-transaction_thread = threading.Thread(target=send_transaction)
-transaction_thread.start()
+def start_transaction_thread():
+    transaction_thread = threading.Thread(target=send_transaction)
+    transaction_thread.start()
 
 @bot.message_handler(commands=['stats'])
 def send_stats(message):
@@ -156,42 +158,39 @@ def send_stats(message):
 
             if last_burn_tx_time:
                 time_since_last_burn = datetime.now() - last_burn_tx_time
-                time_left_for_next_burn = timedelta(hours=12) - time_since_last_burn
+                time_since_last_burn_str = format_timedelta(time_since_last_burn)
+            else:
+                time_since_last_burn_str = "N/A"
 
-            stats_message = f"""
-            🔥 <b>Total Tokens Burned:</b> <code>{total_burned:,.0f}</code>
-            💥 <b>Total Percentage of Total Supply Burned:</b> <code>{percentage_burned:.6f}%</code>
-            💼 <b>Bot Holding:</b> <code>{bot_holdings:,.0f}</code>
-            💰 <b>Value Burned:</b> <code>${total_value_burned:,.2f}</code>
+            message = f"""
+            <b>🔥🔥<i>BURN STATISTICS</i>🔥🔥</b>
+- <b>Total Burned:</b> <code>{total_burned:.0f} Tokens</code>
+- <b>Total Value Burned:</b> <code>${total_value_burned:.2f}</code>
+- <b>Percentage Burned:</b> <code>{percentage_burned:.2f}%</code>
+- <b>Bot Holdings:</b> <code>{bot_holdings:.0f} Tokens</code>
+- <b>Last Burn Time:</b> <code>{time_since_last_burn_str}</code>\n
+🐦<a href='https://x.com/thisisbased_'>Twitter</a> 💬<a href='https://t.me/ThisIsBasedFOB'>Telegram</a> 🌐<a href='https://fineonbase.wtf/'>Website</a>
             """
-            if last_burn_tx_time:
-                stats_message += f"<b>🔗 Last Burn Transaction:</b> <a href='https://basescan.org/tx/{last_burn_tx_hash}'>View</a>\n"
-                stats_message += f"<b>⏱️Time Since Last Burn:</b> <code>{format_timedelta(time_since_last_burn)}</code>\n"
-            stats_message += f"<b>⏳Time Left for Next Burn:</b> <code>{format_timedelta(time_left_for_next_burn)}</code>\n"
-            stats_message += """
-            🐦<a href='https://x.com/thisisbased_'>Twitter</a> 💬<a href='https://t.me/ThisIsBasedFOB'>Telegram</a> 🌐<a href='https://fineonbase.wtf/'>Website</a>
-            """
-            print(stats_message)
-            send_video_message('https://i.imgur.com/NFrSE57.mp4', stats_message)
+            send_msg(message.chat.id, message)
         else:
-            print("Error:", response.text)
+            send_msg(message.chat.id, "Failed to fetch statistics. Please try again later.")
     except Exception as e:
-        print("Error:", e)
-        send_message("Error occurred while fetching stats.")
+        print(f"Error fetching statistics: {e}")
+        send_msg(message.chat.id, f"Error fetching statistics: {e}")
 
-@bot.message_handler(commands=['start'])
-def send_welcome(message):
-    welcome_message = """
-    🚀🔥 Introducing the <b>OnFire Burn Bot</b> (@OnFireBurnbot)! 🔥🚀
-    Take your project to the next level with our powerful @OnFireBurnbot! Automate and customize your token burns with ease, while keeping your community informed and engaged. Perfect for projects on Base Chain, BSC, and ETH!
-    ✨ Features:
-     • Automated Token Burns: Set the total tokens to burn and the interval between burns.
-     • Real-Time Notifications: Send instant burn notifications to your Telegram group.
-     • Comprehensive Stats: Track total tokens burned with detailed stats.
-     • Customizable Settings: Tailor the bot to fit your project's unique needs.
-    Boost your token's value and transparency effortlessly. Don't miss out – integrate our OnFire Burn bot today!
-    🔗 Contact @TheBasedOne 🔗
-    """
-    send_msg(message.chat.id, welcome_message)
+def main():
+    start_transaction_thread()
 
-bot.polling()
+    while True:
+        try:
+            bot.polling(none_stop=True)
+        except requests.exceptions.ReadTimeout as e:
+            print(f"ReadTimeout occurred: {e}")
+            time.sleep(15)  # Wait for 15 seconds before restarting the bot
+        except Exception as e:
+            print(f"Error occurred: {e}")
+            send_message(f"Bot encountered an error: {e}")
+            time.sleep(15)  # Wait for 15 seconds before restarting the bot
+
+if __name__ == "__main__":
+    main()
